@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-05-31
+
+### Fixed
+- 修復 GitHub Actions 在自動對齊 npm 版本號與 Release Tag 時可能因版本相同而產生的錯誤。
+- 優化 `package.json` 與 `LICENSE` 中的作者詮釋資料（一致採用 "Will 保哥"）。
+
+### Added
+- 驗證基於 OIDC Trusted Publishing 的全自動、免密碼化套件發佈工作流。
+
 ## [0.1.0] - 2026-05-31
 
 ### Added
