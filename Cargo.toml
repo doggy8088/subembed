@@ -1,8 +1,8 @@
 [package]
-name = "burn-in-zh-subtitles"
+name = "subembed"
 version = "0.1.0"
 edition = "2024"
-description = "Rust CLI foundation for burning Traditional Chinese subtitles into video"
+description = "subembed CLI for burning Traditional Chinese subtitles into video"
 
 [dependencies]
 anyhow = "1.0.100"

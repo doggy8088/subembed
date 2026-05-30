@@ -1,9 +1,9 @@
 {
-  "name": "@willh/burn-subtitle",
+  "name": "@willh/subembed",
   "version": "0.1.0",
-  "description": "Thin npm wrapper for the burn-in-zh-subtitles Rust CLI",
+  "description": "Thin npm wrapper for the subembed Rust CLI",
   "bin": {
-    "burn-subtitle": "npm/cli.cjs"
+    "subembed": "npm/cli.cjs"
   },
   "scripts": {
     "postinstall": "node npm/postinstall.cjs",
@@ -18,7 +18,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/willh/burn-in-zh-subtitles.git"
+    "url": "git+https://github.com/willh/subembed.git"
   },
   "publishConfig": {
     "access": "public"

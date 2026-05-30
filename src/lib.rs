@@ -29,8 +29,7 @@ mod tests {
 
     #[test]
     fn run_with_cli_surfaces_validation_errors_from_pipeline() {
-        let cli =
-            crate::cli::Cli::parse_from(["burn-in-zh-subtitles", "input.mp4", "subtitles.vtt"]);
+        let cli = crate::cli::Cli::parse_from(["subembed", "input.mp4", "subtitles.vtt"]);
 
         let error = run_with_cli(cli).expect_err("missing video should fail validation");
         assert!(

@@ -24,6 +24,7 @@ const {
   executableName,
   installedBinDir,
   installedBinPath,
+  localBuildExecutableName,
   releaseBaseUrl,
   resolvePlatform,
 } = require('./shared.cjs');
@@ -136,7 +137,7 @@ function installFromLocalBuild(platform = process.platform) {
     return false;
   }
 
-  const localRelease = join(PACKAGE_ROOT, 'target', 'release', executableName(platform));
+  const localRelease = join(PACKAGE_ROOT, 'target', 'release', localBuildExecutableName(platform));
   if (!existsSync(localRelease)) {
     return false;
   }

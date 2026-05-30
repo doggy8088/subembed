@@ -71,7 +71,7 @@ pub(crate) fn execute(config: AppConfig) -> Result<()> {
         )
     })?;
 
-    ffmpeg::burn_subtitles(
+    ffmpeg::embed_subtitles(
         &toolset,
         &context.config.video,
         &wrapped_ass_path,
@@ -171,7 +171,7 @@ impl WorkDir {
                 .unwrap_or_default()
                 .as_nanos();
             let path = parent.join(format!(
-                ".burn_subtitles_work.{}.{}.{}.{}",
+                ".subembed-work.{}.{}.{}.{}",
                 std::process::id(),
                 timestamp,
                 suffix,

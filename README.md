@@ -1,6 +1,6 @@
-# burn-in-zh-subtitles
+# subembed / 嵌入器
 
-`burn-in-zh-subtitles` 是一個 Rust CLI，用來把繁體中文字幕直接燒錄進影片。
+`subembed`（中文可稱「嵌入器」）是一個 Rust CLI，用來把繁體中文字幕直接燒錄進影片。
 
 它會呼叫 `ffprobe` / `ffmpeg` 建立一條完整流程：探測影片尺寸、把字幕整理成 ASS、套用樣式、重新換行，最後輸出已燒字的 MP4。
 
@@ -18,31 +18,31 @@
 
 ### 方式 1：下載 GitHub Release 二進位檔
 
-每個正式版 tag（`vX.Y.Z`）都會由 GitHub Actions 建出對應平台的壓縮檔與 SHA-256 校驗檔。
+每個正式版 tag（`vX.Y.Z`）都會由 GitHub Actions 建出對應平台的壓縮檔與 SHA-256 校驗檔；發佈頁面位於：<https://github.com/willh/subembed/releases>。
 
-目前 release 產物矩陣：
+目前 release 資產矩陣：
 
-- macOS arm64：`aarch64-apple-darwin`
-- macOS x64：`x86_64-apple-darwin`
-- Linux x64：`x86_64-unknown-linux-gnu`
-- Windows x64：`x86_64-pc-windows-msvc`
+- macOS arm64：`subembed-aarch64-apple-darwin.tar.xz`
+- macOS x64：`subembed-x86_64-apple-darwin.tar.xz`
+- Linux x64：`subembed-x86_64-unknown-linux-gnu.tar.xz`
+- Windows x64：`subembed-x86_64-pc-windows-msvc.zip`
 
-下載解壓後，把可執行檔 `burn-in-zh-subtitles`（Windows 為 `burn-in-zh-subtitles.exe`）放到你的 `PATH` 即可。
+下載解壓後，把可執行檔 `subembed`（Windows 為 `subembed.exe`）放到你的 `PATH` 即可。
 
 ### 方式 2：從原始碼建置
 
 需要 stable Rust toolchain。
 
 ```bash
-git clone https://github.com/willh/burn-in-zh-subtitles.git
-cd burn-in-zh-subtitles
+git clone https://github.com/willh/subembed.git
+cd subembed
 cargo build --release
 ```
 
 建置完成後，可執行：
 
 ```bash
-./target/release/burn-in-zh-subtitles -v
+./target/release/subembed -v
 ```
 
 如果想安裝到 Cargo bin 目錄：
@@ -56,9 +56,9 @@ cargo install --path .
 ### 基本語法
 
 ```text
-burn-in-zh-subtitles [OPTIONS] <VIDEO> <SUBTITLE> [OUTPUT]
-burn-in-zh-subtitles -v
-burn-in-zh-subtitles --version
+subembed [OPTIONS] <VIDEO> <SUBTITLE> [OUTPUT]
+subembed -v
+subembed --version
 ```
 
 ### 位置參數
@@ -82,20 +82,20 @@ burn-in-zh-subtitles --version
 
 ```bash
 # 使用預設輸出名稱
-burn-in-zh-subtitles movie.mp4 movie.zh-tw.vtt
+subembed movie.mp4 movie.zh-tw.vtt
 
 # 指定輸出檔名
-burn-in-zh-subtitles movie.mp4 movie.zh-tw.srt movie.final.mp4
+subembed movie.mp4 movie.zh-tw.srt movie.final.mp4
 
 # 允許覆寫既有檔案
-burn-in-zh-subtitles --force movie.mp4 movie.zh-tw.ass
+subembed --force movie.mp4 movie.zh-tw.ass
 
 # 輸出後自動開啟
-burn-in-zh-subtitles --open movie.mp4 movie.zh-tw.vtt
+subembed --open movie.mp4 movie.zh-tw.vtt
 
 # 顯示版本
-burn-in-zh-subtitles -v
-burn-in-zh-subtitles --version
+subembed -v
+subembed --version
 ```
 
 ## 字幕樣式環境變數
@@ -134,7 +134,7 @@ FONT_SIZE=64 \
 MARGIN_V=48 \
 OUTLINE_SIZE=5 \
 SHADOW_SIZE=2 \
-burn-in-zh-subtitles movie.mp4 movie.zh-tw.vtt
+subembed movie.mp4 movie.zh-tw.vtt
 ```
 
 > 注意：預設 `FONT_DIR` 是 macOS 路徑。若你在 Linux 或 Windows 上執行，通常需要自行設定 `FONT_DIR`，並確認 `FONT_NAME` 對應的字型真的存在。
@@ -157,9 +157,9 @@ burn-in-zh-subtitles movie.mp4 movie.zh-tw.vtt
 
 ### 受管下載快取位置
 
-- macOS：`~/Library/Caches/burn-in-zh-subtitles/tools/ffmpeg`
-- Linux：`${XDG_CACHE_HOME:-~/.cache}/burn-in-zh-subtitles/tools/ffmpeg`
-- Windows：`%LOCALAPPDATA%\burn-in-zh-subtitles\tools\ffmpeg`
+- macOS：`~/Library/Caches/subembed/tools/ffmpeg`
+- Linux：`${XDG_CACHE_HOME:-~/.cache}/subembed/tools/ffmpeg`
+- Windows：`%LOCALAPPDATA%\subembed\tools\ffmpeg`
 
 ### 手動安裝時請確認
 
@@ -169,33 +169,33 @@ burn-in-zh-subtitles movie.mp4 movie.zh-tw.vtt
 
 如果你想完全掌控 ffmpeg 版本，最穩定的作法仍然是先自行安裝系統 `ffmpeg` / `ffprobe`。
 
-## npm 套件：`@willh/burn-subtitle`
+## npm 套件：`@willh/subembed`
 
-此專案同時提供 npm wrapper：`@willh/burn-subtitle`。
+此專案同時提供 npm wrapper：`@willh/subembed`。
 
-- npm 套件名稱：`@willh/burn-subtitle`
-- 安裝後的命令名稱：`burn-subtitle`
+- npm 套件名稱：`@willh/subembed`
+- 安裝後的命令名稱：`subembed`
 - 本質上是薄封裝：實際工作仍由 Rust 二進位檔執行
 
 ### 安裝與使用
 
 ```bash
-npm install -g @willh/burn-subtitle
-burn-subtitle movie.mp4 movie.zh-tw.vtt
+npm install -g @willh/subembed
+subembed movie.mp4 movie.zh-tw.vtt
 ```
 
 或使用 `npx`：
 
 ```bash
-npx @willh/burn-subtitle movie.mp4 movie.zh-tw.vtt
+npx @willh/subembed movie.mp4 movie.zh-tw.vtt
 ```
 
 ### npm wrapper 會做什麼
 
 - `postinstall` 會依目前平台下載對應 GitHub Release 資產
 - 下載後會驗證 `.sha256` 校驗檔
-- 安裝完成後，`burn-subtitle` 會直接轉呼叫原生 Rust binary
-- 若是在此 repo 內開發，且 `target/release/` 已經有本地建好的 binary，wrapper 會優先使用本地建置結果
+- 安裝完成後，`subembed` 會直接轉呼叫原生 Rust binary
+- 若是在此 repo 內開發，wrapper 也包含優先重用本地建置結果的路徑
 
 ### npm wrapper 支援平台
 
@@ -216,7 +216,7 @@ npx @willh/burn-subtitle movie.mp4 movie.zh-tw.vtt
   - `cargo clippy --locked --all-targets --all-features -- -D warnings`
   - `cargo test --locked`
   - `npm test`
-- `Release`：在 push `v*.*.*` tag 時建立 GitHub Release、打包各平台 Rust binary、產出 SHA-256 檔並上傳資產
+- `Release`：在 push `v*.*.*` tag 時建立 GitHub Release、打包各平台 `subembed` binary、產出 SHA-256 檔並上傳資產
 - `Publish npm`：在 GitHub Release 發佈後，先確認所有 release 資產都可下載，再以 provenance 發佈到 npm
 
 ## 支援平台與注意事項
@@ -244,8 +244,8 @@ npx @willh/burn-subtitle movie.mp4 movie.zh-tw.vtt
 ## 快速檢查
 
 ```bash
-burn-in-zh-subtitles --help
-burn-in-zh-subtitles -v
+subembed --help
+subembed -v
 ffmpeg -hide_banner -filters | grep -E ' ass | subtitles '
 ```
 

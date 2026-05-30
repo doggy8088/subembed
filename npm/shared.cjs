@@ -3,11 +3,12 @@
 const { join } = require('node:path');
 
 const PACKAGE_ROOT = join(__dirname, '..');
-const PACKAGE_NAME = '@willh/burn-subtitle';
-const CLI_NAME = 'burn-subtitle';
-const BINARY_NAME = 'burn-in-zh-subtitles';
+const PACKAGE_NAME = '@willh/subembed';
+const CLI_NAME = 'subembed';
+const BINARY_NAME = 'subembed';
+const LOCAL_BUILD_BINARY_NAME = 'subembed';
 const GITHUB_OWNER = 'willh';
-const GITHUB_REPO = 'burn-in-zh-subtitles';
+const GITHUB_REPO = 'subembed';
 
 const SUPPORTED_TARGETS = {
   'darwin-arm64': {
@@ -66,6 +67,10 @@ function executableName(platform = process.platform) {
   return platform === 'win32' ? `${BINARY_NAME}.exe` : BINARY_NAME;
 }
 
+function localBuildExecutableName(platform = process.platform) {
+  return platform === 'win32' ? `${LOCAL_BUILD_BINARY_NAME}.exe` : LOCAL_BUILD_BINARY_NAME;
+}
+
 function installedBinDir() {
   return join(__dirname, `${CLI_NAME}-bin`);
 }
@@ -87,6 +92,7 @@ module.exports = {
   CLI_NAME,
   GITHUB_OWNER,
   GITHUB_REPO,
+  LOCAL_BUILD_BINARY_NAME,
   PACKAGE_NAME,
   PACKAGE_ROOT,
   SUPPORTED_TARGETS,
@@ -94,6 +100,7 @@ module.exports = {
   executableName,
   installedBinDir,
   installedBinPath,
+  localBuildExecutableName,
   platformKey,
   releaseBaseUrl,
   releaseTag,

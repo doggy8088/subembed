@@ -50,7 +50,7 @@ test('maps supported platforms to release artifacts', () => {
   assert.equal(artifactName(resolvePlatform('linux', 'x64')), `${BINARY_NAME}-x86_64-unknown-linux-gnu.tar.xz`);
   assert.equal(artifactName(resolvePlatform('win32', 'x64')), `${BINARY_NAME}-x86_64-pc-windows-msvc.zip`);
   assert.equal(executableName('win32'), `${BINARY_NAME}.exe`);
-  assert.equal(releaseBaseUrl('1.2.3'), 'https://github.com/willh/burn-in-zh-subtitles/releases/download/v1.2.3');
+  assert.equal(releaseBaseUrl('1.2.3'), 'https://github.com/willh/subembed/releases/download/v1.2.3');
 });
 
 test('rejects unsupported platforms with a clear error', () => {
@@ -113,8 +113,8 @@ test('cli wrapper launches the installed binary on non-Windows hosts', () => {
 test('builds the expected release asset URL list', () => {
   const urls = expectedReleaseUrls('9.9.9');
   assert.equal(urls.length, 8);
-  assert.ok(urls.includes('https://github.com/willh/burn-in-zh-subtitles/releases/download/v9.9.9/burn-in-zh-subtitles-x86_64-unknown-linux-gnu.tar.xz'));
-  assert.ok(urls.includes('https://github.com/willh/burn-in-zh-subtitles/releases/download/v9.9.9/burn-in-zh-subtitles-x86_64-pc-windows-msvc.zip.sha256'));
+  assert.ok(urls.includes('https://github.com/willh/subembed/releases/download/v9.9.9/subembed-x86_64-unknown-linux-gnu.tar.xz'));
+  assert.ok(urls.includes('https://github.com/willh/subembed/releases/download/v9.9.9/subembed-x86_64-pc-windows-msvc.zip.sha256'));
 });
 
 test('verifies release assets and reports failures clearly', async () => {

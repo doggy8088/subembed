@@ -409,7 +409,7 @@ pub(crate) fn convert_subtitles_to_ass(
     })
 }
 
-pub(crate) fn burn_subtitles(
+pub(crate) fn embed_subtitles(
     toolset: &FfmpegToolset,
     video: &Path,
     subtitle: &Path,

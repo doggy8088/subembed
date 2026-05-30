@@ -136,7 +136,7 @@ mod tests {
 
     #[test]
     fn derives_default_output_from_video_path() {
-        let cli = Cli::parse_from(["burn-in-zh-subtitles", "clips/demo.mp4", "subs/demo.vtt"]);
+        let cli = Cli::parse_from(["subembed", "clips/demo.mp4", "subs/demo.vtt"]);
         let env = BTreeMap::new();
 
         let config = AppConfig::from_env_map(&cli, &env).expect("config should build");
@@ -148,7 +148,7 @@ mod tests {
 
     #[test]
     fn uses_style_overrides_from_environment() {
-        let cli = Cli::parse_from(["burn-in-zh-subtitles", "demo.mp4", "demo.vtt"]);
+        let cli = Cli::parse_from(["subembed", "demo.mp4", "demo.vtt"]);
         let env = BTreeMap::from([
             (FONT_NAME_KEY.to_owned(), "Noto Sans CJK TC".to_owned()),
             (FONT_DIR_KEY.to_owned(), "/custom/fonts".to_owned()),
@@ -170,7 +170,7 @@ mod tests {
 
     #[test]
     fn rejects_invalid_numeric_overrides() {
-        let cli = Cli::parse_from(["burn-in-zh-subtitles", "demo.mp4", "demo.vtt"]);
+        let cli = Cli::parse_from(["subembed", "demo.mp4", "demo.vtt"]);
         let env = BTreeMap::from([(FONT_SIZE_KEY.to_owned(), "big".to_owned())]);
 
         let error = AppConfig::from_env_map(&cli, &env).expect_err("FONT_SIZE should be numeric");
@@ -180,7 +180,7 @@ mod tests {
 
     #[test]
     fn empty_string_overrides_fall_back_to_defaults() {
-        let cli = Cli::parse_from(["burn-in-zh-subtitles", "demo.mp4", "demo.vtt"]);
+        let cli = Cli::parse_from(["subembed", "demo.mp4", "demo.vtt"]);
         let env = BTreeMap::from([
             (FONT_NAME_KEY.to_owned(), "   ".to_owned()),
             (FONT_DIR_KEY.to_owned(), "".to_owned()),

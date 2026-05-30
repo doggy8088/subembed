@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use clap::{ArgAction, Parser, ValueHint};
 
 const LONG_ABOUT: &str = "\
-Burn Traditional Chinese subtitles into a video with a staged ffmpeg-based workflow.
+subembed burns Traditional Chinese subtitles into a video with a staged ffmpeg-based workflow.
 
 Workflow:
   1. Probe the source video with ffprobe
@@ -21,11 +21,11 @@ Tool resolution:
 
 const AFTER_HELP: &str = "\
 Examples:
-  burn-in-zh-subtitles movie.mp4 movie.zh-tw.vtt
-  burn-in-zh-subtitles movie.mp4 movie.zh-tw.ass
-  burn-in-zh-subtitles movie.mp4 movie.zh-tw.srt custom-output.mp4
-  burn-in-zh-subtitles --force --open movie.mp4 movie.zh-tw.vtt
-  burn-in-zh-subtitles -v
+  subembed movie.mp4 movie.zh-tw.vtt
+  subembed movie.mp4 movie.zh-tw.ass
+  subembed movie.mp4 movie.zh-tw.srt custom-output.mp4
+  subembed --force --open movie.mp4 movie.zh-tw.vtt
+  subembed -v
 
 Inputs and output:
   - VIDEO and SUBTITLE are required unless -v/--version is used.
@@ -49,20 +49,20 @@ FFmpeg provisioning:
     manually and confirm `ffmpeg -hide_banner -filters` exposes `ass` or `subtitles`.
 
 Notes:
-  - The Rust CLI always requires explicit input files for normal burns.
+  - The subembed CLI always requires explicit input files for normal burns.
   - Subtitle inputs are staged into ASS before rendering; common inputs include
     .ass, .srt, and .vtt, plus other formats ffmpeg can decode.
   - --open uses the platform default opener (`open`, `xdg-open`, or `start`).";
 
 #[derive(Debug, Clone, Parser)]
 #[command(
-    name = "burn-in-zh-subtitles",
+    name = "subembed",
     version,
     disable_version_flag = true,
     about = "Burn Traditional Chinese subtitles into a video.",
     long_about = LONG_ABOUT,
     after_help = AFTER_HELP,
-    override_usage = "burn-in-zh-subtitles [OPTIONS] <VIDEO> <SUBTITLE> [OUTPUT]\n       burn-in-zh-subtitles -v|--version"
+    override_usage = "subembed [OPTIONS] <VIDEO> <SUBTITLE> [OUTPUT]\n       subembed -v|--version"
 )]
 pub(crate) struct Cli {
     #[arg(
@@ -120,7 +120,7 @@ mod tests {
     #[test]
     fn parses_required_positionals_and_flags() {
         let cli = Cli::parse_from([
-            "burn-in-zh-subtitles",
+            "subembed",
             "--force",
             "--open",
             "movie.mp4",
@@ -137,7 +137,7 @@ mod tests {
 
     #[test]
     fn rejects_missing_required_inputs() {
-        let error = Cli::try_parse_from(["burn-in-zh-subtitles"])
+        let error = Cli::try_parse_from(["subembed"])
             .expect_err("CLI should require explicit video and subtitle files");
 
         assert_eq!(
@@ -162,7 +162,7 @@ mod tests {
 
     #[test]
     fn parses_short_version_without_inputs() {
-        let cli = Cli::parse_from(["burn-in-zh-subtitles", "-v"]);
+        let cli = Cli::parse_from(["subembed", "-v"]);
 
         assert!(cli.version);
         assert_eq!(cli.video, None);
@@ -171,7 +171,7 @@ mod tests {
 
     #[test]
     fn parses_long_version_without_inputs() {
-        let cli = Cli::parse_from(["burn-in-zh-subtitles", "--version"]);
+        let cli = Cli::parse_from(["subembed", "--version"]);
 
         assert!(cli.version);
         assert_eq!(cli.video, None);

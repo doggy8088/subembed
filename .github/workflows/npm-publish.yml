@@ -34,5 +34,5 @@ jobs:
       - name: Publish package
         run: npm publish --provenance --access public
         env:
-          BURN_SUBTITLE_RELEASE_ASSET_RETRIES: 36
-          BURN_SUBTITLE_RELEASE_ASSET_RETRY_DELAY_MS: 10000
+          SUBEMBED_RELEASE_ASSET_RETRIES: 36
+          SUBEMBED_RELEASE_ASSET_RETRY_DELAY_MS: 10000

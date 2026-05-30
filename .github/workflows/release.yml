@@ -9,7 +9,8 @@ permissions:
   contents: write
 
 env:
-  APP_NAME: burn-in-zh-subtitles
+  APP_NAME: subembed
+  RELEASE_NAME: subembed
 
 jobs:
   create-release:
@@ -72,8 +73,12 @@ jobs:
           ARCHIVE_EXT: ${{ matrix.archive_ext }}
         run: |
           set -euo pipefail
-          asset_base="${APP_NAME}-${TARGET}"
-          tar -cJf "${asset_base}.${ARCHIVE_EXT}" -C "target/${TARGET}/release" "${APP_NAME}"
+          asset_base="${RELEASE_NAME}-${TARGET}"
+          package_dir="target/${TARGET}/package"
+          rm -rf "$package_dir"
+          mkdir -p "$package_dir"
+          cp "target/${TARGET}/release/${APP_NAME}" "$package_dir/${RELEASE_NAME}"
+          tar -cJf "${asset_base}.${ARCHIVE_EXT}" -C "$package_dir" "${RELEASE_NAME}"
           echo "ASSET=${asset_base}.${ARCHIVE_EXT}" >> "$GITHUB_ENV"
 
       - name: Package archive (Windows)
@@ -84,9 +89,13 @@ jobs:
           ARCHIVE_EXT: ${{ matrix.archive_ext }}
           BINARY_EXT: ${{ matrix.binary_ext }}
         run: |
-          $assetBase = "$env:APP_NAME-$env:TARGET"
+          $assetBase = "$env:RELEASE_NAME-$env:TARGET"
           $asset = "$assetBase.$env:ARCHIVE_EXT"
-          Compress-Archive -Path "target/$env:TARGET/release/$env:APP_NAME$env:BINARY_EXT" -DestinationPath $asset -Force
+          $packageDir = "target/$env:TARGET/package"
+          if (Test-Path $packageDir) { Remove-Item $packageDir -Recurse -Force }
+          New-Item -ItemType Directory -Path $packageDir | Out-Null
+          Copy-Item "target/$env:TARGET/release/$env:APP_NAME$env:BINARY_EXT" "$packageDir/$env:RELEASE_NAME$env:BINARY_EXT"
+          Compress-Archive -Path "$packageDir/$env:RELEASE_NAME$env:BINARY_EXT" -DestinationPath $asset -Force
           "ASSET=$asset" >> $env:GITHUB_ENV
 
       - name: Write archive checksum (Unix)

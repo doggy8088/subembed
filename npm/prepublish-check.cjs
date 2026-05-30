@@ -6,8 +6,8 @@ const { URL } = require('node:url');
 
 const { SUPPORTED_TARGETS, artifactName, releaseBaseUrl } = require('./shared.cjs');
 
-const RETRIES_ENV = 'BURN_SUBTITLE_RELEASE_ASSET_RETRIES';
-const RETRY_DELAY_ENV = 'BURN_SUBTITLE_RELEASE_ASSET_RETRY_DELAY_MS';
+const RETRIES_ENV = 'SUBEMBED_RELEASE_ASSET_RETRIES';
+const RETRY_DELAY_ENV = 'SUBEMBED_RELEASE_ASSET_RETRY_DELAY_MS';
 const REDIRECT_LIMIT = 5;
 
 function packageVersion() {

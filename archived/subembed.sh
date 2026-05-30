@@ -22,8 +22,8 @@ OPEN_OUTPUT=0
 
 usage() {
   cat <<'EOF'
-用法：
-  ./burn_subtitles.sh [--force] [--open] [影片.mp4 字幕.vtt [輸出.mp4]]
+嵌入器（subembed）用法：
+  ./archived/subembed.sh [--force] [--open] [影片.mp4 字幕.vtt [輸出.mp4]]
 
 不帶參數時，會直接使用這組預設檔案：
   ../OpenAI_2026-05-29_2060428604727771421.mp4
@@ -41,7 +41,7 @@ EOF
 }
 
 fail() {
-  printf '錯誤：%s\n' "$*" >&2
+  printf '嵌入器錯誤：%s\n' "$*" >&2
   exit 1
 }
 
@@ -242,9 +242,9 @@ else
   fi
 fi
 
-TMP_DIR="${OUTPUT_DIR}/.burn_subtitles_work.$$"
+TMP_DIR="${OUTPUT_DIR}/.subembed-work.$$"
 while [[ -e "${TMP_DIR}" ]]; do
-  TMP_DIR="${OUTPUT_DIR}/.burn_subtitles_work.$$.${RANDOM}"
+  TMP_DIR="${OUTPUT_DIR}/.subembed-work.$$.${RANDOM}"
 done
 mkdir -p "${TMP_DIR}"
 trap 'rm -rf "${TMP_DIR}"' EXIT
@@ -318,4 +318,4 @@ if [[ "${OPEN_OUTPUT}" -eq 1 ]]; then
   open "${OUTPUT_FILE}"
 fi
 
-printf '完成：%s\n' "${OUTPUT_FILE}"
+printf '嵌入器完成：%s\n' "${OUTPUT_FILE}"
