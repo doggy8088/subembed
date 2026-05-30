@@ -1,0 +1,112 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+env:
+  APP_NAME: burn-in-zh-subtitles
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release view "$TAG" >/dev/null 2>&1 || \
+            gh release create "$TAG" --title "$TAG" --generate-notes
+
+  build-and-upload:
+    needs: create-release
+    runs-on: ${{ matrix.runner }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            archive_ext: tar.xz
+            binary_ext: ''
+          - runner: windows-latest
+            target: x86_64-pc-windows-msvc
+            archive_ext: zip
+            binary_ext: .exe
+          - runner: macos-13
+            target: x86_64-apple-darwin
+            archive_ext: tar.xz
+            binary_ext: ''
+          - runner: macos-14
+            target: aarch64-apple-darwin
+            archive_ext: tar.xz
+            binary_ext: ''
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install stable Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache Rust build artifacts
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build release binary
+        run: cargo build --release --locked --target ${{ matrix.target }}
+
+      - name: Package archive (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+          ARCHIVE_EXT: ${{ matrix.archive_ext }}
+        run: |
+          set -euo pipefail
+          asset_base="${APP_NAME}-${TARGET}"
+          tar -cJf "${asset_base}.${ARCHIVE_EXT}" -C "target/${TARGET}/release" "${APP_NAME}"
+          echo "ASSET=${asset_base}.${ARCHIVE_EXT}" >> "$GITHUB_ENV"
+
+      - name: Package archive (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          TARGET: ${{ matrix.target }}
+          ARCHIVE_EXT: ${{ matrix.archive_ext }}
+          BINARY_EXT: ${{ matrix.binary_ext }}
+        run: |
+          $assetBase = "$env:APP_NAME-$env:TARGET"
+          $asset = "$assetBase.$env:ARCHIVE_EXT"
+          Compress-Archive -Path "target/$env:TARGET/release/$env:APP_NAME$env:BINARY_EXT" -DestinationPath $asset -Force
+          "ASSET=$asset" >> $env:GITHUB_ENV
+
+      - name: Write archive checksum (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          checksum=$(shasum -a 256 "$ASSET" | awk '{print $1}')
+          printf '%s  %s\n' "$checksum" "$(basename "$ASSET")" > "${ASSET}.sha256"
+
+      - name: Write archive checksum (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $hash = (Get-FileHash $env:ASSET -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $(Split-Path $env:ASSET -Leaf)" | Out-File "$env:ASSET.sha256" -Encoding ascii
+
+      - name: Upload release asset
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: gh release upload "$TAG" "$ASSET" "${ASSET}.sha256" --clobber

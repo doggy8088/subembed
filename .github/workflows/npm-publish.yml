@@ -1,0 +1,38 @@
+name: Publish npm
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Align npm version with release tag
+        if: github.event_name == 'release'
+        run: |
+          VERSION="${{ github.event.release.tag_name }}"
+          VERSION="${VERSION#v}"
+          npm version "$VERSION" --no-git-tag-version
+
+      - name: Publish package
+        run: npm publish --provenance --access public
+        env:
+          BURN_SUBTITLE_RELEASE_ASSET_RETRIES: 36
+          BURN_SUBTITLE_RELEASE_ASSET_RETRY_DELAY_MS: 10000

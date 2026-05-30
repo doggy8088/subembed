@@ -1,0 +1,38 @@
+{
+  "name": "@willh/burn-subtitle",
+  "version": "0.1.0",
+  "description": "Thin npm wrapper for the burn-in-zh-subtitles Rust CLI",
+  "bin": {
+    "burn-subtitle": "npm/cli.cjs"
+  },
+  "scripts": {
+    "postinstall": "node npm/postinstall.cjs",
+    "test": "node --test tests/postinstall.test.cjs",
+    "prepublishOnly": "npm test && npm pack --dry-run && node npm/prepublish-check.cjs"
+  },
+  "files": [
+    "npm/cli.cjs",
+    "npm/postinstall.cjs",
+    "npm/prepublish-check.cjs",
+    "npm/shared.cjs"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/willh/burn-in-zh-subtitles.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "rust",
+    "cli",
+    "subtitle",
+    "video",
+    "ffmpeg"
+  ],
+  "author": "willh",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=18"
+  }
+}
