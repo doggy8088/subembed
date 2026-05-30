@@ -1,5 +1,5 @@
 {
-  "name": "@willh/subembed",
+  "name": "subembed",
   "version": "0.1.0",
   "description": "Thin npm wrapper for the subembed Rust CLI",
   "bin": {

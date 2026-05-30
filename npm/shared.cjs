@@ -3,7 +3,7 @@
 const { join } = require('node:path');
 
 const PACKAGE_ROOT = join(__dirname, '..');
-const PACKAGE_NAME = '@willh/subembed';
+const PACKAGE_NAME = 'subembed';
 const CLI_NAME = 'subembed';
 const BINARY_NAME = 'subembed';
 const LOCAL_BUILD_BINARY_NAME = 'subembed';
