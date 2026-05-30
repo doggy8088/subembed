@@ -30,7 +30,7 @@
     "video",
     "ffmpeg"
   ],
-  "author": "willh",
+  "author": "Will 保哥",
   "license": "MIT",
   "engines": {
     "node": ">=18"
