@@ -35,7 +35,7 @@ jobs:
         run: |
           VERSION="${{ github.event.release.tag_name }}"
           VERSION="${VERSION#v}"
-          npm version "$VERSION" --no-git-tag-version
+          npm version "$VERSION" --no-git-tag-version --allow-same-version
 
       - name: Publish package
         if: ${{ github.event.inputs.skip_publish != 'true' && (github.event_name != 'release' || (!contains(github.event.release.body, '[skip npm]') && !startsWith(github.event.release.tag_name, 'v0.1.0'))) }}
