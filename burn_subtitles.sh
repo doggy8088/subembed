@@ -62,8 +62,10 @@ pick_ffmpeg() {
 has_filter() {
   local ffmpeg_bin="$1"
   local filter_name="$2"
+  local filters_output
 
-  "${ffmpeg_bin}" -hide_banner -filters 2>/dev/null | grep -Eq "[[:space:]]${filter_name}[[:space:]]"
+  filters_output="$("${ffmpeg_bin}" -hide_banner -filters 2>/dev/null)"
+  grep -Eq "[[:space:]]${filter_name}[[:space:]]" <<<"${filters_output}"
 }
 
 ensure_burn_filter() {
@@ -198,7 +200,7 @@ PlayResY: ${VIDEO_HEIGHT}
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,${FONT_NAME},${FONT_SIZE},&H0000FFFF,&H0000FFFF,&H00000000,&H64000000,-1,0,0,0,100,100,0,0,1,3.2,1.4,2,48,48,${MARGIN_V},1
+Style: Default,${FONT_NAME},${FONT_SIZE},&H0000FFFF,&H0000FFFF,&H00000000,&H64000000,0,0,0,0,100,100,0,0,1,3.2,1.6,2,48,48,${MARGIN_V},1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
