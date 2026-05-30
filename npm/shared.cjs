@@ -7,7 +7,7 @@ const PACKAGE_NAME = 'subembed';
 const CLI_NAME = 'subembed';
 const BINARY_NAME = 'subembed';
 const LOCAL_BUILD_BINARY_NAME = 'subembed';
-const GITHUB_OWNER = 'willh';
+const GITHUB_OWNER = 'doggy8088';
 const GITHUB_REPO = 'subembed';
 
 const SUPPORTED_TARGETS = {

@@ -18,7 +18,7 @@
 
 ### 方式 1：下載 GitHub Release 二進位檔
 
-每個正式版 tag（`vX.Y.Z`）都會由 GitHub Actions 建出對應平台的壓縮檔與 SHA-256 校驗檔；發佈頁面位於：<https://github.com/willh/subembed/releases>。
+每個正式版 tag（`vX.Y.Z`）都會由 GitHub Actions 建出對應平台的壓縮檔與 SHA-256 校驗檔；發佈頁面位於：<https://github.com/doggy8088/subembed/releases>。
 
 目前 release 資產矩陣：
 
@@ -34,7 +34,7 @@
 需要 stable Rust toolchain。
 
 ```bash
-git clone https://github.com/willh/subembed.git
+git clone https://github.com/doggy8088/subembed.git
 cd subembed
 cargo build --release
 ```
@@ -169,25 +169,25 @@ subembed movie.mp4 movie.zh-tw.vtt
 
 如果你想完全掌控 ffmpeg 版本，最穩定的作法仍然是先自行安裝系統 `ffmpeg` / `ffprobe`。
 
-## npm 套件：`@willh/subembed`
+## npm 套件：`subembed`
 
-此專案同時提供 npm wrapper：`@willh/subembed`。
+此專案同時提供 npm wrapper：`subembed`。
 
-- npm 套件名稱：`@willh/subembed`
+- npm 套件名稱：`subembed`
 - 安裝後的命令名稱：`subembed`
 - 本質上是薄封裝：實際工作仍由 Rust 二進位檔執行
 
 ### 安裝與使用
 
 ```bash
-npm install -g @willh/subembed
+npm install -g subembed
 subembed movie.mp4 movie.zh-tw.vtt
 ```
 
 或使用 `npx`：
 
 ```bash
-npx @willh/subembed movie.mp4 movie.zh-tw.vtt
+npx subembed movie.mp4 movie.zh-tw.vtt
 ```
 
 ### npm wrapper 會做什麼

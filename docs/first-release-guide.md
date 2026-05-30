@@ -48,7 +48,7 @@ graph TD
    git add .
    git commit -m "feat: initial commit"
    git branch -M main
-   git remote add origin git@github.com:willh/subembed.git
+   git remote add origin git@github.com:doggy8088/subembed.git
    git push -u origin main
    ```
 
@@ -107,7 +107,7 @@ graph TD
    > [!NOTE]
    > 執行此指令時，npm 會觸發 `prepublishOnly` 的生命週期：
    > 1. 執行本地單元測試 (`npm test`)。
-   > 2. 執行 `node npm/prepublish-check.cjs`。此腳本會對 `https://github.com/willh/subembed/releases/download/v0.1.0/...` 發出 HEAD 請求。
+   > 2. 執行 `node npm/prepublish-check.cjs`。此腳本會對 `https://github.com/doggy8088/subembed/releases/download/v0.1.0/...` 發出 HEAD 請求。
    > 3. 由於第二階段的 GitHub Action 已成功將資產上傳，此處檢查將會順利**通過**！
    > 4. 套件成功發佈至 npmjs.com。
 
@@ -128,7 +128,7 @@ graph TD
    
    | 欄位名稱 | 建議填入值 | 說明 |
    | :--- | :--- | :--- |
-   | **GitHub Owner** | `willh` | 您的 GitHub 帳號或組織名稱 |
+   | **GitHub Owner** | `doggy8088` | 您的 GitHub 帳號或組織名稱 |
    | **Repository** | `subembed` | 儲存庫名稱（須完全一致） |
    | **Workflow Name** | `npm-publish.yml` | 負責執行發佈的 GitHub 工作流檔名 |
    | **Environment** | *(留空)* | 除非您在 GitHub 儲存庫中設定了特定的 Environment，否則留空即可 |
