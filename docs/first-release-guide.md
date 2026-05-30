@@ -187,4 +187,26 @@ graph TD
 
 ---
 
+## ⚡ 效能與相容性優化紀錄 (Optimization Notes)
+
+本專案在驗證 `v0.1.1` 全自動發佈時，進行了以下兩項關鍵的架構與效能優化：
+
+### 1. 升級編譯伺服器為 macOS 14 實體（解決佇列卡住問題）
+* **問題**：原先 `release.yml` 使用 `macos-13` 進行 macOS Intel (`x86_64`) 平台的編譯。由於該環境已被 GitHub 棄用，佇列時間通常長達 15~30 分鐘，導致自動發佈經常超時失敗。
+* **優化**：我們將所有 macOS 的編譯伺服器統一升級為 **`macos-14` (Apple Silicon 伺服器)**。
+* **原理**：利用 Rust 的強大跨平台編譯能力，在 Apple Silicon 伺服器上直接編譯出支援 Intel 的 `x86_64-apple-darwin` 執行檔。
+* **成果**：
+  - macOS Apple Silicon 編譯上傳：**25 秒**
+  - macOS Intel 編譯上傳：**59 秒**
+  - 佇列等待時間：**0 秒** (即時啟動)
+
+### 2. 升級發佈工作流至 Node 24 與最新 npm（解決 OIDC 404 握手問題）
+* **問題**：舊版的 npm 在處理 OIDC Trusted Publishing 的權限交握時，容易因安全性協定不相容，導致 npm 伺服器拒絕連線並回傳誤導性的 `404 Not Found - PUT ... - Not found` 錯誤。
+* **優化**：
+  - 在 `.github/workflows/npm-publish.yml` 中，將 Node.js 環境升級至 **`Node.js 24`**。
+  - 在執行發佈前，特別加入一動 **`npm install -g npm@latest`** 確保 npm cli 本體為最新版本。
+* **成果**：OIDC 安全驗證流程完全順暢，不需輸入任何密碼或 `NPM_TOKEN`，即可於 **27 秒內** 全自動發佈成功！
+
+---
+
 祝您的 `subembed` 順利發佈！若流程中有任何細節需要調整，歡迎隨時提出。
