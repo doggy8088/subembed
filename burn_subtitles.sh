@@ -5,26 +5,38 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-DEFAULT_VIDEO="${WORKSPACE_DIR}/OpenAI_2026-05-14_2055016850849993072.mp4"
+DEFAULT_VIDEO="${WORKSPACE_DIR}/OpenAI_2026-05-29_2060428604727771421.mp4"
 DEFAULT_SUBTITLE="${WORKSPACE_DIR}/OpenAI_2026-05-29_2060428604727771421_zh-tw.vtt"
-DEFAULT_OUTPUT="${WORKSPACE_DIR}/OpenAI_2026-05-14_2055016850849993072.zh-tw.burned.mp4"
+DEFAULT_OUTPUT="${WORKSPACE_DIR}/OpenAI_2026-05-29_2060428604727771421.zh-tw.burned.mp4"
+MARGIN_L=48
+MARGIN_R=48
 
 FONT_NAME="${FONT_NAME:-LINE Seed TW_OTF Regular}"
 FONT_DIR="${FONT_DIR:-/Library/Fonts}"
+FONT_SIZE_OVERRIDE="${FONT_SIZE:-}"
+MARGIN_V_OVERRIDE="${MARGIN_V:-}"
+OUTLINE_SIZE_OVERRIDE="${OUTLINE_SIZE:-}"
+SHADOW_SIZE_OVERRIDE="${SHADOW_SIZE:-}"
 FORCE_OVERWRITE=0
+OPEN_OUTPUT=0
 
 usage() {
   cat <<'EOF'
 用法：
-  ./burn_subtitles.sh [--force] [影片.mp4 字幕.vtt [輸出.mp4]]
+  ./burn_subtitles.sh [--force] [--open] [影片.mp4 字幕.vtt [輸出.mp4]]
 
-不帶參數時，會直接使用這兩個範例檔：
-  ../OpenAI_2026-05-14_2055016850849993072.mp4
+不帶參數時，會直接使用這組預設檔案：
+  ../OpenAI_2026-05-29_2060428604727771421.mp4
   ../OpenAI_2026-05-29_2060428604727771421_zh-tw.vtt
+  ../OpenAI_2026-05-29_2060428604727771421.zh-tw.burned.mp4
 
 可用環境變數：
   FONT_NAME   字型名稱，預設為 LINE Seed TW_OTF Regular
   FONT_DIR    字型所在資料夾，預設為 /Library/Fonts
+  FONT_SIZE   強制指定字幕字級（覆蓋自動計算）
+  MARGIN_V    強制指定字幕底部邊界
+  OUTLINE_SIZE 強制指定字幕外框粗細
+  SHADOW_SIZE  強制指定字幕陰影粗細
 EOF
 }
 
@@ -53,6 +65,20 @@ pick_ffmpeg() {
 
   if command -v ffmpeg >/dev/null 2>&1; then
     command -v ffmpeg
+    return 0
+  fi
+
+  return 1
+}
+
+pick_node() {
+  if command -v node >/dev/null 2>&1; then
+    command -v node
+    return 0
+  fi
+
+  if command -v nodejs >/dev/null 2>&1; then
+    command -v nodejs
     return 0
   fi
 
@@ -106,6 +132,10 @@ while [[ $# -gt 0 ]]; do
       FORCE_OVERWRITE=1
       shift
       ;;
+    -o|--open)
+      OPEN_OUTPUT=1
+      shift
+      ;;
     --)
       shift
       break
@@ -155,6 +185,7 @@ FFMPEG_BIN="$(pick_ffmpeg)" || fail "系統上找不到 ffmpeg"
 FFPROBE_BIN="$(dirname "${FFMPEG_BIN}")/ffprobe"
 [[ -x "${FFPROBE_BIN}" ]] || FFPROBE_BIN="$(command -v ffprobe || true)"
 [[ -n "${FFPROBE_BIN}" && -x "${FFPROBE_BIN}" ]] || fail "系統上找不到 ffprobe"
+NODE_BIN="$(pick_node)" || fail "系統上找不到 node/nodejs"
 
 RENDER_FILTER="$(ensure_burn_filter "${FFMPEG_BIN}")"
 
@@ -169,23 +200,58 @@ IFS=x read -r VIDEO_WIDTH VIDEO_HEIGHT < <(
 
 [[ -n "${VIDEO_WIDTH}" && -n "${VIDEO_HEIGHT}" ]] || fail "無法讀取影片解析度"
 
-FONT_SIZE=$(( VIDEO_HEIGHT * 34 / 1000 ))
-if (( FONT_SIZE < 26 )); then
-  FONT_SIZE=26
-elif (( FONT_SIZE > 42 )); then
-  FONT_SIZE=42
+if [[ -n "${FONT_SIZE_OVERRIDE}" ]]; then
+  [[ "${FONT_SIZE_OVERRIDE}" =~ ^[0-9]+$ ]] || fail "FONT_SIZE 必須是整數"
+  FONT_SIZE="${FONT_SIZE_OVERRIDE}"
+else
+  FONT_SIZE=$(( VIDEO_HEIGHT * 70 / 1080 ))
+  if (( FONT_SIZE < 24 )); then
+    FONT_SIZE=24
+  elif (( FONT_SIZE > 140 )); then
+    FONT_SIZE=140
+  fi
 fi
 
-MARGIN_V=$(( VIDEO_HEIGHT * 35 / 1000 ))
-if (( MARGIN_V < 28 )); then
-  MARGIN_V=28
+if [[ -n "${MARGIN_V_OVERRIDE}" ]]; then
+  [[ "${MARGIN_V_OVERRIDE}" =~ ^[0-9]+$ ]] || fail "MARGIN_V 必須是整數"
+  MARGIN_V="${MARGIN_V_OVERRIDE}"
+else
+  MARGIN_V=$(( VIDEO_HEIGHT * 80 / 3000 ))
+  if (( MARGIN_V < FONT_SIZE / 2 )); then
+    MARGIN_V=$(( FONT_SIZE / 2 ))
+  fi
 fi
 
-TMP_DIR="$(mktemp -d)"
+if [[ -n "${OUTLINE_SIZE_OVERRIDE}" ]]; then
+  [[ "${OUTLINE_SIZE_OVERRIDE}" =~ ^[0-9]+$ ]] || fail "OUTLINE_SIZE 必須是整數"
+  OUTLINE_SIZE="${OUTLINE_SIZE_OVERRIDE}"
+else
+  OUTLINE_SIZE=$(( FONT_SIZE * 8 / 100 ))
+  if (( OUTLINE_SIZE < 4 )); then
+    OUTLINE_SIZE=4
+  fi
+fi
+
+if [[ -n "${SHADOW_SIZE_OVERRIDE}" ]]; then
+  [[ "${SHADOW_SIZE_OVERRIDE}" =~ ^[0-9]+$ ]] || fail "SHADOW_SIZE 必須是整數"
+  SHADOW_SIZE="${SHADOW_SIZE_OVERRIDE}"
+else
+  SHADOW_SIZE=$(( OUTLINE_SIZE / 2 ))
+  if (( SHADOW_SIZE < 2 )); then
+    SHADOW_SIZE=2
+  fi
+fi
+
+TMP_DIR="${OUTPUT_DIR}/.burn_subtitles_work.$$"
+while [[ -e "${TMP_DIR}" ]]; do
+  TMP_DIR="${OUTPUT_DIR}/.burn_subtitles_work.$$.${RANDOM}"
+done
+mkdir -p "${TMP_DIR}"
 trap 'rm -rf "${TMP_DIR}"' EXIT
 
 RAW_ASS="${TMP_DIR}/raw.ass"
 STYLED_ASS="${TMP_DIR}/styled.ass"
+WRAPPED_ASS="${TMP_DIR}/wrapped.ass"
 
 "${FFMPEG_BIN}" -hide_banner -loglevel error -y -i "${SUBTITLE_PATH}" "${RAW_ASS}"
 
@@ -193,14 +259,14 @@ STYLED_ASS="${TMP_DIR}/styled.ass"
   cat <<EOF
 [Script Info]
 ScriptType: v4.00+
-WrapStyle: 2
+WrapStyle: 0
 ScaledBorderAndShadow: yes
 PlayResX: ${VIDEO_WIDTH}
 PlayResY: ${VIDEO_HEIGHT}
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,${FONT_NAME},${FONT_SIZE},&H0000FFFF,&H0000FFFF,&H00000000,&H64000000,0,0,0,0,100,100,0,0,1,3.2,1.6,2,48,48,${MARGIN_V},1
+Style: Default,${FONT_NAME},${FONT_SIZE},&H0000FFFF,&H0000FFFF,&H00000000,&H64000000,0,0,0,0,100,100,0,0,1,${OUTLINE_SIZE},${SHADOW_SIZE},2,${MARGIN_L},${MARGIN_R},${MARGIN_V},1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -212,7 +278,17 @@ EOF
   ' "${RAW_ASS}"
 } > "${STYLED_ASS}"
 
-ASS_FILTER_PATH="${STYLED_ASS//\'/\\\'}"
+"${NODE_BIN}" "${SCRIPT_DIR}/wrap_ass_dialogues.js" \
+  --input "${STYLED_ASS}" \
+  --output "${WRAPPED_ASS}" \
+  --video-width "${VIDEO_WIDTH}" \
+  --font-size "${FONT_SIZE}" \
+  --margin-left "${MARGIN_L}" \
+  --margin-right "${MARGIN_R}" \
+  --outline-size "${OUTLINE_SIZE}" \
+  --shadow-size "${SHADOW_SIZE}"
+
+ASS_FILTER_PATH="${WRAPPED_ASS//\'/\\\'}"
 ASS_FILTER_FONT_DIR="${FONT_DIR//\'/\\\'}"
 
 if [[ "${RENDER_FILTER}" == "ass" ]]; then
@@ -236,5 +312,10 @@ fi
   -c:a copy \
   -movflags +faststart \
   "${OUTPUT_FILE}"
+
+if [[ "${OPEN_OUTPUT}" -eq 1 ]]; then
+  command -v open >/dev/null 2>&1 || fail "找不到 open 指令"
+  open "${OUTPUT_FILE}"
+fi
 
 printf '完成：%s\n' "${OUTPUT_FILE}"
