@@ -22,7 +22,7 @@ OPEN_OUTPUT=0
 
 usage() {
   cat <<'EOF'
-嵌入器（subembed）用法：
+字幕嵌入器（subembed）用法：
   ./archived/subembed.sh [--force] [--open] [影片.mp4 字幕.vtt [輸出.mp4]]
 
 不帶參數時，會直接使用這組預設檔案：
@@ -41,7 +41,7 @@ EOF
 }
 
 fail() {
-  printf '嵌入器錯誤：%s\n' "$*" >&2
+  printf '字幕嵌入器錯誤：%s\n' "$*" >&2
   exit 1
 }
 
@@ -318,4 +318,4 @@ if [[ "${OPEN_OUTPUT}" -eq 1 ]]; then
   open "${OUTPUT_FILE}"
 fi
 
-printf '嵌入器完成：%s\n' "${OUTPUT_FILE}"
+printf '字幕嵌入器完成：%s\n' "${OUTPUT_FILE}"
