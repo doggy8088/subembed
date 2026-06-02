@@ -1,4 +1,5 @@
 use std::path::{Path, PathBuf};
+#[cfg(not(test))]
 use std::process::Command;
 
 use thiserror::Error;
@@ -10,6 +11,7 @@ pub(crate) struct OpenPlan {
 }
 
 #[derive(Debug, Error)]
+#[allow(dead_code)]
 pub(crate) enum OpenError {
     #[error("failed to launch `{command}` for {path}: {source}")]
     Launch {
@@ -43,52 +45,62 @@ pub(crate) fn open_output(plan: &OpenPlan, path: &Path) -> Result<(), OpenError>
         return Ok(());
     }
 
-    let mut command = if cfg!(target_os = "windows") {
-        let mut command = Command::new("cmd");
-        command.arg("/C").arg("start").arg("").arg(path);
-        command
-    } else {
-        let mut command = Command::new(plan.open_command_hint);
-        command.arg(path);
-        command
-    };
-
-    let output = command.output().map_err(|source| OpenError::Launch {
-        command: plan.open_command_hint,
-        path: path.to_path_buf(),
-        source,
-    })?;
-
-    if output.status.success() {
+    #[cfg(test)]
+    {
+        let _ = plan;
+        let _ = path;
         return Ok(());
     }
 
-    let mut details = match output.status.code() {
-        Some(code) => format!("exit code {code}"),
-        None => "terminated by signal".to_owned(),
-    };
-
-    let stderr = String::from_utf8_lossy(&output.stderr).trim().to_owned();
-    if !stderr.is_empty() {
-        details.push_str(": ");
-        details.push_str(&stderr);
-    }
-
-    let stdout = String::from_utf8_lossy(&output.stdout).trim().to_owned();
-    if !stdout.is_empty() {
-        if !stderr.is_empty() {
-            details.push_str(" | ");
+    #[cfg(not(test))]
+    {
+        let mut command = if cfg!(target_os = "windows") {
+            let mut command = Command::new("cmd");
+            command.arg("/C").arg("start").arg("").arg(path);
+            command
         } else {
-            details.push_str(": ");
-        }
-        details.push_str(&stdout);
-    }
+            let mut command = Command::new(plan.open_command_hint);
+            command.arg(path);
+            command
+        };
 
-    Err(OpenError::Failed {
-        command: plan.open_command_hint,
-        path: path.to_path_buf(),
-        details,
-    })
+        let output = command.output().map_err(|source| OpenError::Launch {
+            command: plan.open_command_hint,
+            path: path.to_path_buf(),
+            source,
+        })?;
+
+        if output.status.success() {
+            return Ok(());
+        }
+
+        let mut details = match output.status.code() {
+            Some(code) => format!("exit code {code}"),
+            None => "terminated by signal".to_owned(),
+        };
+
+        let stderr = String::from_utf8_lossy(&output.stderr).trim().to_owned();
+        if !stderr.is_empty() {
+            details.push_str(": ");
+            details.push_str(&stderr);
+        }
+
+        let stdout = String::from_utf8_lossy(&output.stdout).trim().to_owned();
+        if !stdout.is_empty() {
+            if !stderr.is_empty() {
+                details.push_str(" | ");
+            } else {
+                details.push_str(": ");
+            }
+            details.push_str(&stdout);
+        }
+
+        Err(OpenError::Failed {
+            command: plan.open_command_hint,
+            path: path.to_path_buf(),
+            details,
+        })
+    }
 }
 
 #[cfg(test)]

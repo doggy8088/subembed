@@ -18,6 +18,23 @@ pub(crate) struct PipelineContext {
 }
 
 pub(crate) fn execute(config: AppConfig) -> Result<()> {
+    if config.open_output && !config.overwrite_output && config.output.exists() {
+        let absolute_output = std::fs::canonicalize(&config.output).unwrap_or_else(|_| {
+            if config.output.is_absolute() {
+                config.output.clone()
+            } else if let Ok(cwd) = std::env::current_dir() {
+                cwd.join(&config.output)
+            } else {
+                config.output.clone()
+            }
+        });
+        println!("{}", absolute_output.display());
+
+        let platform_plan = platform::plan(config.open_output);
+        platform::open_output(&platform_plan, &config.output)?;
+        return Ok(());
+    }
+
     let context = PipelineContext {
         ffmpeg: ffmpeg::plan(&config),
         subtitle: subtitle::plan(&config),
@@ -44,6 +61,14 @@ pub(crate) fn execute(config: AppConfig) -> Result<()> {
 
     if context.subtitle.requires_ass_staging {
         ffmpeg::convert_subtitles_to_ass(&toolset, &context.config.subtitle, &raw_ass_path)?;
+    } else {
+        fs::copy(&context.config.subtitle, &raw_ass_path).with_context(|| {
+            format!(
+                "failed to copy ASS subtitle file from {} to {}",
+                context.config.subtitle.display(),
+                raw_ass_path.display()
+            )
+        })?;
     }
 
     let raw_ass = fs::read_to_string(&raw_ass_path).with_context(|| {
@@ -84,6 +109,17 @@ pub(crate) fn execute(config: AppConfig) -> Result<()> {
         &context.config.output,
         context.config.overwrite_output,
     )?;
+
+    let absolute_output = std::fs::canonicalize(&context.config.output).unwrap_or_else(|_| {
+        if context.config.output.is_absolute() {
+            context.config.output.clone()
+        } else if let Ok(cwd) = std::env::current_dir() {
+            cwd.join(&context.config.output)
+        } else {
+            context.config.output.clone()
+        }
+    });
+    println!("{}", absolute_output.display());
 
     platform::open_output(&context.platform, &context.config.output)?;
     Ok(())
@@ -305,5 +341,24 @@ mod tests {
             "output file already exists: {}",
             output_path.display()
         )));
+    }
+
+    #[test]
+    fn execute_opens_existing_output_without_force_when_open_enabled() {
+        let test_dir = TestDir::new("pipeline-open-existing");
+        let output_path = test_dir.path().join("output.mp4");
+        fs::write(&output_path, "existing video contents").expect("output fixture should be written");
+
+        // When open_output is true and overwrite_output is false, and output exists,
+        // it should succeed and just open the existing output file, even if video/subtitle don't exist.
+        execute(AppConfig {
+            video: test_dir.path().join("nonexistent_video.mp4"),
+            subtitle: test_dir.path().join("nonexistent_subtitle.vtt"),
+            output: output_path,
+            overwrite_output: false,
+            open_output: true,
+            style: style_config(test_dir.path().to_path_buf()),
+        })
+        .expect("should succeed by opening the existing output instead of validating inputs or failing");
     }
 }

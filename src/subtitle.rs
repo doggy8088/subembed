@@ -317,9 +317,16 @@ pub(crate) enum SubtitleError {
     MalformedDialogue { line: String },
 }
 
-pub(crate) fn plan(_config: &AppConfig) -> SubtitlePlan {
+pub(crate) fn plan(config: &AppConfig) -> SubtitlePlan {
+    let extension = config
+        .subtitle
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .map(|ext| ext.to_lowercase());
+    let requires_ass_staging = extension.as_deref() != Some("ass");
+
     SubtitlePlan {
-        requires_ass_staging: true,
+        requires_ass_staging,
         wraps_dialogue_lines: true,
     }
 }
@@ -873,6 +880,23 @@ mod tests {
         let plan = super::plan(&config);
 
         assert!(plan.requires_ass_staging);
+        assert!(plan.wraps_dialogue_lines);
+    }
+
+    #[test]
+    fn plan_does_not_require_ass_staging_for_ass_files() {
+        let config = AppConfig {
+            video: PathBuf::from("video.mp4"),
+            subtitle: PathBuf::from("subtitle.ass"),
+            output: PathBuf::from("output.mp4"),
+            overwrite_output: false,
+            open_output: false,
+            style: style_config(),
+        };
+
+        let plan = super::plan(&config);
+
+        assert!(!plan.requires_ass_staging);
         assert!(plan.wraps_dialogue_lines);
     }
 
