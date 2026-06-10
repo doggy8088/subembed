@@ -327,7 +327,7 @@ pub(crate) fn plan(config: &AppConfig) -> SubtitlePlan {
 
     SubtitlePlan {
         requires_ass_staging,
-        wraps_dialogue_lines: true,
+        wraps_dialogue_lines: requires_ass_staging,
     }
 }
 
@@ -897,7 +897,7 @@ mod tests {
         let plan = super::plan(&config);
 
         assert!(!plan.requires_ass_staging);
-        assert!(plan.wraps_dialogue_lines);
+        assert!(!plan.wraps_dialogue_lines);
     }
 
     #[test]
