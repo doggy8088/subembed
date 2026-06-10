@@ -15,10 +15,10 @@ graph TD
     A[本地推送 Tag v0.1.0] --> B[觸發 release.yml]
     B --> C[建立 GitHub Release v0.1.0]
     C --> D[編譯 4 平台 Rust 執行檔並上傳至 Release]
-    D --> E[自動觸發 npm-publish.yml]
-    E -->|偵測到 Tag 名稱為 v0.1.0| F[全自動跳過 npm 發佈]
-    D --> G[本地手動發佈 npm 套件 v0.1.0]
-    G --> H[觸發 prepublish-check]
+    D --> E[計算 .sha256 並上傳 8 個資產至 GitHub Release]
+    E --> F[2. 執行 publish-npm 任務]
+    F --> G[執行 npm install -g npm@latest 與 Node 24 環境]
+    G --> H[執行 prepublish-check]
     H -->|向 GitHub 驗證 Release Assets 存在| I[npm 套件發佈成功]
     I --> J[於 npmjs.com 設定 Trusted Publishing]
     J --> K[後續版本 Tag v0.1.1]
@@ -55,10 +55,8 @@ graph TD
 
 ### 第二階段：觸發第一次 CI 並建立 Release (全自動跳過 npm 發佈)
 
-我們在 `.github/workflows/npm-publish.yml` 中設計了**智慧自動判定機制**：
+我們在 `.github/workflows/release.yml` 中設計了**智慧自動判定機制**：
 - **Tag 過濾**：當發佈的版本 tag 開頭為 `v0.1.0` 時，自動發佈流程會**全自動安全跳過**，不進行任何 npm 發佈動作。
-- **內容過濾（備用）**：若 Release 的內容中包含 `[skip npm]` 關鍵字，自動發佈也會安全跳過。
-- **手動觸發過濾**：手動點選 `workflow_dispatch` 時，可勾選 `skip_publish: true` 參數跳過。
 
 1. **建立並推送第一個版本 Tag**：
    本專案的 `package.json` 目前設定版本為 `0.1.0`，我們建立 `v0.1.0` 標籤：
@@ -70,8 +68,8 @@ graph TD
 2. **第一次 CI 執行（編譯資產）**：
    - 進入 GitHub 儲存庫的 **Actions** 頁面，`Release` 工作流會自動啟動，為各平台編譯 Rust CLI，並自動在 GitHub 建立一個名為 `v0.1.0` 的 Release，內含 4 平台二進位檔與校驗碼。
    - **此時會發生什麼？**
-     - GitHub 偵測到 Release 狀態為 `published`，自動觸發 `Publish npm` 工作流。
-     - 該工作流會執行 `Publish package` 步驟，其中的 `if` 條件會判定目前 Tag 開頭為 `v0.1.0`，因此會**全自動且安全地跳過發佈步驟**，工作流成功結束而不報錯！
+     - GitHub 偵測到 Release 狀態為 `published`，自動執行 `publish-npm` 任務。
+     - 該任務會執行 `Publish package` 步驟，其中的 `if` 條件會判定目前 Tag 開頭為 `v0.1.0`，因此會**全自動且安全地跳過發佈步驟**，工作流成功結束而不報錯！
 
 ---
 
@@ -119,10 +117,10 @@ graph TD
    | :--- | :--- | :--- |
    | **GitHub Owner** | `doggy8088` | 您的 GitHub 帳號或組織名稱 |
    | **Repository** | `subembed` | 儲存庫名稱（須完全一致） |
-   | **Workflow Name** | `npm-publish.yml` | 負責執行發佈的 GitHub 工作流檔名 |
+   | **Workflow Name** | `release.yml` | 負責執行發佈的 GitHub 工作流檔名 |
    | **Environment** | *(留空)* | 除非您在 GitHub 儲存庫中設定了特定的 Environment，否則留空即可 |
 
-3. **點擊 Add Publisher 完成儲存**。
+3. **點擊 Add Publisher 完成儲存。**
 
 > [!TIP]
 > **優勢說明**：
@@ -156,9 +154,9 @@ graph TD
 
 4. **見證全自動化部署流程**：
    - **第一步：編譯 CLI 與上傳資產**：Tag `v0.1.1` 被推上後，`release.yml` 工作流啟動，編譯 4 平台二進位檔並建立 GitHub Release。
-   - **第二步：自動觸發 npm 發佈**：當 `v0.1.1` Release 自動建立並處於 `published` 狀態時，觸發 `npm-publish.yml`。
+   - **第二步：自動執行 npm 發佈任務**：當 `v0.1.1` Release 自動建立並處於 `published` 狀態時，觸發 `publish-npm` 任務。
    - **第三步：OIDC 交換與發佈**：
-     - 由於 Release 的版本**不以 `v0.1.0` 開頭**，且內文不含 `[skip npm]`，因此 `Publish package` 的 `if` 條件會判定為 `true`。
+     - 由於 Release 的版本**不以 `v0.1.0` 開頭**，因此 `Publish package` 的 `if` 條件會判定為 `true`。
      - 透過 OIDC 自動向 npm 取得發佈憑證，驗證成功。
      - `prepublish-check.cjs` 自動確認 GitHub 上已有 `v0.1.1` 的 4 平台二進位檔。
      - 自動發佈至 npm 套件成功！🎉
@@ -167,23 +165,17 @@ graph TD
 
 ## 🛠️ 觸發控制參數詳解 (Trigger Parameters)
 
-在 `.github/workflows/npm-publish.yml` 中，我們在發佈步驟添加了此條件限制：
+在 `.github/workflows/release.yml` 中，我們在發佈步驟添加了此條件限制：
 
 ```yaml
 - name: Publish package
-  if: ${{ github.event.inputs.skip_publish != 'true' && (github.event_name != 'release' || (!contains(github.event.release.body, '[skip npm]') && !startsWith(github.event.release.tag_name, 'v0.1.0'))) }}
+  if: ${{ !startsWith(github.ref_name, 'v0.1.0') }}
 ```
 
-這項設計極具彈性，提供了三種過濾發佈的方法：
+這項設計極具彈性，提供了自動過濾發佈的方法：
 
 ### 1. 全自動 Tag 過濾 (v0.1.0)
 任何以 `v0.1.0` 開頭的 Release Tag 都會自動被 npm 發佈流程跳過。這是專門為首次發佈（設定 OIDC 之前）設計的零摩擦機制。
-
-### 2. GitHub Release 內文控制
-如果在以後的正式發佈中，您希望建立 GitHub Release 但暫時不發佈到 npm，只需在 Release Body（說明欄位）中寫入 `[skip npm]` 關鍵字，CI 就會自動跳過。
-
-### 3. 手動觸發控制 (Workflow Dispatch)
-若您在 GitHub Actions 頁面手動點選 **Run workflow** 執行 `Publish npm`，可勾選 **"Skip actual npm publishing (run dry-run/checks only)"** 參數跳過發佈。
 
 ---
 
@@ -203,7 +195,7 @@ graph TD
 ### 2. 升級發佈工作流至 Node 24 與最新 npm（解決 OIDC 404 握手問題）
 * **問題**：舊版的 npm 在處理 OIDC Trusted Publishing 的權限交握時，容易因安全性協定不相容，導致 npm 伺服器拒絕連線並回傳誤導性的 `404 Not Found - PUT ... - Not found` 錯誤。
 * **優化**：
-  - 在 `.github/workflows/npm-publish.yml` 中，將 Node.js 環境升級至 **`Node.js 24`**。
+  - 在 `.github/workflows/release.yml` 中，將 Node.js 環境升級至 **`Node.js 24`**。
   - 在執行發佈前，特別加入一動 **`npm install -g npm@latest`** 確保 npm cli 本體為最新版本。
 * **成果**：OIDC 安全驗證流程完全順暢，不需輸入任何密碼或 `NPM_TOKEN`，即可於 **27 秒內** 全自動發佈成功！
 

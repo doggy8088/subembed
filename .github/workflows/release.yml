@@ -125,7 +125,32 @@ jobs:
 
   publish-npm:
     needs: build-and-upload
-    uses: ./.github/workflows/npm-publish.yml
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - name: Upgrade npm
+        run: npm install -g npm@latest
+
+      - name: Align npm version with release tag
+        run: |
+          VERSION="${{ github.ref_name }}"
+          VERSION="${VERSION#v}"
+          npm version "$VERSION" --no-git-tag-version --allow-same-version
+
+      - name: Publish package
+        if: ${{ !startsWith(github.ref_name, 'v0.1.0') }}
+        run: npm publish --provenance --access public
+        env:
+          SUBEMBED_RELEASE_ASSET_RETRIES: 36
+          SUBEMBED_RELEASE_ASSET_RETRY_DELAY_MS: 10000

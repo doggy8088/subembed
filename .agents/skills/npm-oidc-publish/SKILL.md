@@ -34,8 +34,8 @@ graph TD
     A[本地推送版本標籤 vX.Y.Z] --> B[1. 觸發 release.yml 工作流]
     B --> C[建立 GitHub Release]
     C --> D[編譯 4 平台 Rust 執行檔]
-    D --> E[計算 .sha256 ENG 並上傳 8 個資產至 GitHub Release]
-    E --> F[2. 觸發 npm-publish.yml 工作流]
+    D --> E[計算 .sha256 並上傳 8 個資產至 GitHub Release]
+    E --> F[2. 執行 publish-npm 任務]
     F --> G[執行 npm install -g npm@latest 與 Node 24 環境]
     G --> H[執行 prepublish-check.cjs]
     H -->|透過 36 次 HEAD 請求，輪詢 Release Assets 存在性| I[安全校驗通過]
@@ -92,10 +92,10 @@ graph TD
 因此，首次發佈必須遵循以下三階段「冷啟動」流程：
 
 ### 第一階段：全自動跳過 OIDC 的 Release 建立
-當您本地推送第一個 Tag `v0.1.0` 時，`.github/workflows/npm-publish.yml` 中配置了**智慧控制參數 (Trigger Parameters)**。
+當您本地推送第一個 Tag `v0.1.0` 時，`.github/workflows/release.yml` 中配置了**智慧控制參數 (Trigger Parameters)**。
 在 `Publish package` 步驟中：
 ```yaml
-if: ${{ github.event.inputs.skip_publish != 'true' && (github.event_name != 'release' || (!contains(github.event.release.body, '[skip npm]') && !startsWith(github.event.release.tag_name, 'v0.1.0'))) }}
+if: ${{ !startsWith(github.ref_name, 'v0.1.0') }}
 ```
 * **運作機制**：偵測到 Tag 名稱為 `v0.1.0` 開頭時，自動發佈流程會**全自動安全跳過**，只建立 GitHub Release 並上傳二進位檔案，而不嘗試向 npm 發佈。
 
@@ -117,7 +117,7 @@ if: ${{ github.event.inputs.skip_publish != 'true' && (github.event_name != 'rel
 3. 新增 GitHub Publisher：
    - **GitHub Owner**: `doggy8088` (或您的組織帳號)
    - **Repository**: `subembed`
-   - **Workflow Name**: `npm-publish.yml`
+   - **Workflow Name**: `release.yml`
    - **Environment**: *(留空)*
 4. **驗證全自動發佈**：
    - 將 `package.json` 的版本升級至 `0.1.1`（或更新版本）。
@@ -126,7 +126,7 @@ if: ${{ github.event.inputs.skip_publish != 'true' && (github.event_name != 'rel
      git tag v0.1.1
      git push origin v0.1.1
      ```
-   - 此時，`release.yml` 會全自動編譯上傳資產，接著 `npm-publish.yml` 會透過 OIDC **全自動完成 100% 免密碼的 npm 安全發佈**！
+   - 此時，`release.yml` 會全自動編譯上傳資產，接著透過 OIDC **全自動完成 100% 免密碼的 npm 安全發佈**！
 
 ---
 
