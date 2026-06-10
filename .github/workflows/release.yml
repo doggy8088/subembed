@@ -122,3 +122,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
         run: gh release upload "$TAG" "$ASSET" "${ASSET}.sha256" --clobber
+
+  publish-npm:
+    needs: build-and-upload
+    uses: ./.github/workflows/npm-publish.yml
+    permissions:
+      contents: read
+      id-token: write

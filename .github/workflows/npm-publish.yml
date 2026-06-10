@@ -11,6 +11,13 @@ on:
         type: boolean
         required: false
         default: false
+  workflow_call:
+    inputs:
+      skip_publish:
+        description: 'Skip actual npm publishing (run dry-run/checks only)'
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
@@ -34,14 +41,17 @@ jobs:
         run: npm install -g npm@latest
 
       - name: Align npm version with release tag
-        if: github.event_name == 'release'
         run: |
-          VERSION="${{ github.event.release.tag_name }}"
+          if [ "${{ github.event_name }}" = "release" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
+          else
+            VERSION="${{ github.ref_name }}"
+          fi
           VERSION="${VERSION#v}"
           npm version "$VERSION" --no-git-tag-version --allow-same-version
 
       - name: Publish package
-        if: ${{ github.event.inputs.skip_publish != 'true' && (github.event_name != 'release' || (!contains(github.event.release.body, '[skip npm]') && !startsWith(github.event.release.tag_name, 'v0.1.0'))) }}
+        if: ${{ inputs.skip_publish != true && inputs.skip_publish != 'true' && !startsWith(github.ref_name, 'v0.1.0') }}
         run: npm publish --provenance --access public
         env:
           SUBEMBED_RELEASE_ASSET_RETRIES: 36
