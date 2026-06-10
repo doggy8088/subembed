@@ -347,7 +347,8 @@ mod tests {
     fn execute_opens_existing_output_without_force_when_open_enabled() {
         let test_dir = TestDir::new("pipeline-open-existing");
         let output_path = test_dir.path().join("output.mp4");
-        fs::write(&output_path, "existing video contents").expect("output fixture should be written");
+        fs::write(&output_path, "existing video contents")
+            .expect("output fixture should be written");
 
         // When open_output is true and overwrite_output is false, and output exists,
         // it should succeed and just open the existing output file, even if video/subtitle don't exist.
@@ -359,6 +360,8 @@ mod tests {
             open_output: true,
             style: style_config(test_dir.path().to_path_buf()),
         })
-        .expect("should succeed by opening the existing output instead of validating inputs or failing");
+        .expect(
+            "should succeed by opening the existing output instead of validating inputs or failing",
+        );
     }
 }

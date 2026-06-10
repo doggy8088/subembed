@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2026-06-10
+
+### Fixed
+- 修復 `cargo clippy` 警告與程式碼格式化（`cargo fmt`）問題以確保 CI 通過。
+
 ## [0.1.2] - 2026-06-10
 
 ### Added

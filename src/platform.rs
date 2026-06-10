@@ -49,7 +49,7 @@ pub(crate) fn open_output(plan: &OpenPlan, path: &Path) -> Result<(), OpenError>
     {
         let _ = plan;
         let _ = path;
-        return Ok(());
+        Ok(())
     }
 
     #[cfg(not(test))]
