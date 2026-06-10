@@ -1,6 +1,6 @@
 {
   "name": "subembed",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Thin npm wrapper for the subembed Rust CLI",
   "bin": {
     "subembed": "npm/cli.cjs"
