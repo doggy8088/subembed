@@ -80,6 +80,15 @@ graph TD
   ```
   * **優化成果**：佇列等待時間降到 **0 秒**；Intel Mac 編譯上傳在 **59 秒** 內完成，速度提升 15 倍以上！
 
+### 🚨 痛點三：Cargo.lock 版本未同步導致編譯失敗
+* **異常狀況**：
+  在 GitHub Actions 執行 `cargo build --release --locked` 時，出現以下錯誤：
+  ```bash
+  error: cannot update the lock file /home/runner/work/subembed/subembed/Cargo.lock because --locked was passed to prevent this
+  ```
+* **最佳實踐與解決方案**：
+  每次修改 `Cargo.toml` 中的 `version` 欄位後，**必須**在本地端執行 `cargo build` 或 `cargo check`，以使 `Cargo.lock` 同步更新。接著將 `Cargo.lock` 與 `Cargo.toml` 一併提交並推送到 remote 端。
+
 ---
 
 ## 🛠️ 首次發佈「冷啟動」指南 (First-Time Cold Start Guide)
@@ -135,11 +144,12 @@ if: ${{ !startsWith(github.ref_name, 'v0.1.0') }}
 當專案已經完成「冷啟動」，後續發佈新版本（如 `0.1.2`）時，只需執行以下**零配置步驟**：
 
 1. **更新專案版本與日誌**：
-   - 在 `package.json` 中，將 `"version"` 修改為 `"0.1.2"`。
+   - 在 `package.json` 與 `Cargo.toml` 中，將 `"version"` 修改為 `"0.1.2"`。
    - 在 `CHANGELOG.md` 中紀錄變更。
+   - **重要**：在本地執行 `cargo build` 以確保 `Cargo.lock` 被自動同步更新為新版本。
 2. **提交並推送到主分支**：
    ```bash
-   git add package.json CHANGELOG.md
+   git add package.json Cargo.toml Cargo.lock CHANGELOG.md
    git commit -m "chore: bump version to 0.1.2"
    git push origin main
    ```
@@ -149,22 +159,21 @@ if: ${{ !startsWith(github.ref_name, 'v0.1.0') }}
    git push origin v0.1.2
    ```
 4. **監控 GitHub Actions**：
-   - `Release`工作流會自動開始編譯。
-   - 待編譯完成後，`Publish npm` 將被觸發，透過 OIDC 全自動、無痛地將新版本釋出到 npmjs.com。
+   - `Release` 工作流會自動開始編譯。
+   - 待編譯與上傳完成後，`publish-npm` 任務將被觸發，透過 OIDC 全自動、無痛地將新版本釋出到 npmjs.com。
 
 ---
 
 ## 🔍 常見排查與手動干預 (Troubleshooting)
 
-### 1. GitHub Actions 已成功釋出 Release，但 npm 發佈卡住或超時
-* **原因**：可能 GitHub Release 的資產上傳較慢，超過了 `prepublish-check.cjs` 的等待極限。
+### 1. GitHub Actions 已成功釋出 Release，但 npm 發佈失敗或超時
+* **原因**：可能 GitHub Release 的資產上傳較慢，超過了 `prepublish-check.cjs` 的等待極限，或者 OIDC 握手臨時失敗。
 * **解決方案**：
-  進入 GitHub Actions 的 `Publish npm` 工作流頁面，點選 **Run workflow**。勾選或不勾選 `skip_publish`，此處可以手動觸發再次執行 `Publish npm`。
+  進入 GitHub Actions 的 `Release` 工作流執行頁面，點選右上角的 **Re-run failed jobs** 重新執行 `publish-npm` 任務。
 
-### 2. 在 GitHub Release 內文控制不發佈
-* **情境**：在發佈正式 GitHub Release 時，希望「暫時不要」自動發佈至 npm。
-* **解決方案**：
-  在建立或編輯 GitHub Release 時，在 Release Body (說明內文) 的任何地方，寫入 `[skip npm]` 關鍵字。發佈工作流偵測到此字眼後，將會優雅地安全跳過 npm 發佈步驟。
+### 2. CI 遇到 `cannot update the lock file because --locked was passed` 錯誤
+* **原因**：更新了 `Cargo.toml` 中的版本號，但在提交/推送前沒有在本地執行 `cargo build` 更新 `Cargo.lock`。
+* **解決方案**：在本地執行 `cargo build`，將變更後的 `Cargo.lock` 提交並 push 到主分支，然後重新 tag 發佈。
 
 ---
 
