@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2026-06-10
+
+### Added
+- 新增適用於 macOS/Linux 的單行安裝腳本 `install.sh` 與 Windows 的單行安裝腳本 `install.ps1`。
+- 在 `README.md` 中新增單行指令安裝說明，簡化安裝流程。
+
 ## [0.1.1] - 2026-05-31
 
 ### Fixed

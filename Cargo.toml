@@ -1,6 +1,6 @@
 [package]
 name = "subembed"
-version = "0.1.0"
+version = "0.1.2"
 edition = "2024"
 description = "subembed CLI for burning Traditional Chinese subtitles into video"
 

@@ -16,7 +16,22 @@
 
 ## 安裝 Rust CLI
 
-### 方式 1：下載 GitHub Release 二進位檔
+### 方式 1：單行指令安裝（推薦）
+
+你可以使用以下單行指令自動下載並安裝適用於你系統的最新版本：
+
+**macOS / Linux：**
+```bash
+curl -fsSL https://raw.githubusercontent.com/doggy8088/subembed/main/install.sh | bash
+```
+
+**Windows (PowerShell)：**
+```powershell
+irm https://raw.githubusercontent.com/doggy8088/subembed/main/install.ps1 | iex
+```
+
+### 方式 2：下載 GitHub Release 二進位檔
+
 
 每個正式版 tag（`vX.Y.Z`）都會由 GitHub Actions 建出對應平台的壓縮檔與 SHA-256 校驗檔；發佈頁面位於：<https://github.com/doggy8088/subembed/releases>。
 
@@ -29,7 +44,7 @@
 
 下載解壓後，把可執行檔 `subembed`（Windows 為 `subembed.exe`）放到你的 `PATH` 即可。
 
-### 方式 2：從原始碼建置
+### 方式 3：從原始碼建置
 
 需要 stable Rust toolchain。
 
