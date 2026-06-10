@@ -89,6 +89,17 @@ graph TD
 * **最佳實踐與解決方案**：
   每次修改 `Cargo.toml` 中的 `version` 欄位後，**必須**在本地端執行 `cargo build` 或 `cargo check`，以使 `Cargo.lock` 同步更新。接著將 `Cargo.lock` 與 `Cargo.toml` 一併提交並推送到 remote 端。
 
+### 🚨 痛點四：釋出二進位檔與 npm 發佈必須合併於單一工作流 (Single Workflow Integration)
+* **異常狀況 / 痛點**：
+  若將「編譯釋出（`release.yml`）」與「發佈至 npm（`npm-publish.yml`）」拆分為兩個工作流（或使用 Reusable Workflows 呼叫）：
+  1. **OIDC 信任關係配置複雜化**：在 npm 官網設定 Trusted Publishing 時，若使用 Reusable Workflows，權限宣告與 Token 交換的來源工作流名稱（OIDC 聲明中的 `job_workflow_ref`）不易對齊，容易導致 OIDC 握手失敗或 403 拒絕發佈。
+  2. **資產依賴與時序競態條件 (Race Condition)**：npm 的 `prepublish-check.cjs` 需要確認 4 平台二進位檔已上傳至 GitHub Release。若兩者分屬不同工作流，通常需依賴事件觸發（如 `release: published`），這容易遇到 GitHub API 更新延遲或資產尚未完整上傳的競態問題，導致發佈失敗。
+* **最佳實踐與解決方案**：
+  強烈建議將兩者合併為**單一工作流（`release.yml`）**，並利用作業依賴關係（`needs: build-and-upload`）進行順序調度：
+  - **優勢 1**：npm Trusted Publishing 的 Workflow 欄位只需簡單配置為單一的 `release.yml`，避免複雜的多檔案權限授權錯誤。
+  - **優勢 2**：透過 `needs` 依賴關係，確保 100% 編譯成功且資產完整上傳後才啟動發佈，徹底解決時序 race condition。
+  - **優勢 3**：發佈若失敗，可透過 GitHub 介面一鍵 `Re-run failed jobs` 單獨重試發佈作業，維護性極佳。
+
 ---
 
 ## 🛠️ 首次發佈「冷啟動」指南 (First-Time Cold Start Guide)
